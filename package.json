@@ -1,0 +1,30 @@
+{
+  "name": "WebAuthnSelfImplement",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "debug": "tsc && node dest/index"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/body-parser": "^1.17.1",
+    "@types/cbor": "^2.0.0",
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^4.17.1",
+    "@types/jwk-to-pem": "^2.0.0",
+    "@types/node": "^12.7.9",
+    "@types/uuid-parse": "^1.0.0"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cbor": "^5.0.1",
+    "dotenv": "^8.1.0",
+    "express": "^4.17.1",
+    "jwk-to-pem": "^2.0.1",
+    "uuid-parse": "^1.1.0"
+  }
+}

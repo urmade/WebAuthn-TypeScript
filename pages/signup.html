@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<style>
+
+	</style>
+</head>
+
+<body>
+
+	<input type="text" placeholder="ID" id="id">
+	<input type="text" placeholder="Username" id="uname">
+	<input type="text" placeholder="FullName" id="fname">
+	<button onclick="register()">Register</button>
+	<button onclick="login()">Login</button>
+
+	<script>
+		let simpleCache = {};
+		function register() {
+			let id = document.getElementById("id").value;
+			let uname = document.getElementById("uname").value;
+			let fname = document.getElementById("fname").value;
+			if (uname && fname && id) {
+				simpleCache[uname] = "";
+				registerNewKey(id, uname, fname);
+			}
+			else console.error("Parameters missing!");
+		}
+		function login() {
+			let id = document.getElementById("id").value;
+			if (simpleCache[id]) verifyLogin(simpleCache[id]);
+			else console.error("No user created with this user name!");
+		}
+
+
+		async function registerNewKey(userId, userName, fullName) {
+			//To create a new public key that is conform with the WebAuthn standard, we have to provide some options. A complete overview over all options can be found here: https://w3c.github.io/webauthn/#dictionary-makecredentialoptions
+			const publicKeyCredentialCreationOptions = {
+				//The challenge has to be a random string emitted by our application server, see documentation for getServerSideChallenge
+				challenge: Uint8Array.from(
+					await getServerSideChallenge(), c => c.charCodeAt(0)).buffer,
+				//A string identifier for our server / service. Name is the string displayed to the user when prompted for logging in with our server, id the scope to which our newly scheduled public key will be scoped to.
+				rp: {
+					name: "Tobis Webserver",
+					id: "localhost"
+				},
+				user: {
+					//An user-unique ID in your system. If you use an Identity Provider like Azure Active Directory or Auth0, you can use for example the userId scheduled by these systems as an Id
+					id: Uint8Array.from(
+						userId, c => c.charCodeAt(0)),
+					//User name of the user, e.g. the mail adress with which he normally logs into the page
+					name: userName,
+					//Real Name of the user
+					displayName: fullName
+				},
+				//Specifies which kinds of algorithms are accepted for the creation of the public key. You can find a full list of algorithm codes here: https://www.iana.org/assignments/cose/cose.xhtml#algorithms 
+				//For Windows Hello, you must use { alg: -257, type: "public-key" }
+				pubKeyCredParams: [
+					{ alg: -7, type: "public-key" },
+					{ alg: -257, type: "public-key" }
+				],
+				//WebAuthn distincts between cross-platform authentication like YubiKeys (e.g. USB sticks that you have to insert into your PC to authenticate) and platform authentication like Windows Hello or Apple Touch ID. 
+				authenticatorSelection: {
+					//Select authenticators that support username-less flows
+					requireResidentKey: true,
+					//Select authenticators that have a second factor (e.g. PIN, Bio)
+					userVerification: "required",
+					authenticatorAttachment: "platform",
+				},
+				//Time in Milliseconds the user has to complete the authentication before it times out and failes automatically
+				timeout: 60000,
+				//Specifies if the relying party (e.g. our server) wishes to know which Authenticator performed the authentication of the user. You can find all details here: https://w3c.github.io/webauthn/#attestation-conveyance
+				attestation: "direct"
+			};
+
+
+			const credential = await navigator.credentials.create({
+				publicKey: publicKeyCredentialCreationOptions
+			});
+
+			console.log(credential);
+
+			let attestation = {
+				id: base64encode(credential.rawId),
+				clientDataJSON: arrayBufferToString(credential.response.clientDataJSON),
+				attestationObject: base64encode(credential.response.attestationObject)
+			};
+			simpleCache[userId] = credential.id;
+
+			fetch("/authentication/register", {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				redirect: 'follow',
+				referrer: 'no-referrer',
+				body: JSON.stringify({
+					pkc: attestation
+				})
+			})
+		}
+
+		async function verifyLogin(userId) {
+			const publicKeyCredentialRequestOptions = {
+				challenge: Uint8Array.from(
+					await getServerSideChallenge(), c => c.charCodeAt(0)
+				).buffer,
+				timeout: 60000,
+			}
+
+			const assertion = await navigator.credentials.get({
+				publicKey: publicKeyCredentialRequestOptions
+			});
+
+			const readableAssertion = {
+				id: base64encode(assertion.rawId),
+				rawId: base64encode(assertion.rawId),
+				response: {
+					clientDataJSON: arrayBufferToString(assertion.response.clientDataJSON),
+					authenticatorData: base64encode(assertion.response.authenticatorData),
+					signature: base64encode(assertion.response.signature),
+					userHandle: base64encode(assertion.response.userHandle),
+				}
+
+			};
+
+			fetch("/authentication/login", {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				redirect: 'follow',
+				referrer: 'no-referrer',
+				body: JSON.stringify({
+					pkc: readableAssertion
+				})
+			})
+		}
+
+		/* --- HELPER FUNCTIONS --- */
+
+		/*
+		When we create a new Public Key for the WebAuthn protocol, we have to provide a challenge which is a random String that our server schedules. This way, when we receive the public key on our server, we can correlate that key with the challenge and mark the challenge as fulfilled. By that, we can mitigate replay attacks as every challenge can only be used once to create a public key. For more details, see https://w3c.github.io/webauthn/#sctn-cryptographic-challenges
+		*/
+		async function getServerSideChallenge() {
+			let resp = await fetch("/authentication/challenge");
+			let string = await resp.text();
+			console.log(string);
+			return string;
+		}
+
+		//Function that encodes a UInt8Array to a base64 encoded string
+		function base64encode(arrayBuffer) {
+			if (!arrayBuffer || arrayBuffer.length == 0)
+				return undefined;
+
+			return btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer)));
+		}
+
+		//Function that converts an ArrayBuffer to a string
+		function arrayBufferToString(arrayBuffer) {
+			return String.fromCharCode.apply(null, new Uint8Array(arrayBuffer));
+		}
+
+
+
+	</script>
+</body>
+
+</html>
