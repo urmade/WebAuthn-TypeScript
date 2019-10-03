@@ -1,9 +1,9 @@
-import { ClientAttestation } from "../ClientAttestation";
+import { GenericAttestation } from "../../custom/GenericAttestation";
 
 /**
  * Specification: https://w3c.github.io/webauthn/#sctn-fido-u2f-attestation
  */
-export interface FIDOU2FAttestation {
+export interface FIDOU2FAttestation extends GenericAttestation {
 	fmt: "fido-u2f";
 	attStmt: {
 		x5c: Array<Buffer>;
@@ -23,7 +23,7 @@ export function isFIDOU2FAttestation(obj: { [key: string]: any }): boolean {
 	return false;
 }
 
-export function FIDOU2FVerify(attestation:ClientAttestation, clientDataHash:Buffer):boolean {
+export function FIDOU2FVerify(attestation:GenericAttestation, clientDataHash:Buffer):boolean {
 	//TODO
 	return true;
 }

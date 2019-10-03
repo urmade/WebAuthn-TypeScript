@@ -2,14 +2,14 @@ import { AuthenticatorData } from "../AuthenticatorData";
 import { parsePubArea, parseCertInfo, coseToJwk, sha256 } from "./../../../authentication/util";
 import { PubArea } from "../TPM/pubArea";
 import { CertInfo } from "../TPM/CertInfo";
-import { ClientAttestation } from "../ClientAttestation";
+import { GenericAttestation } from "../../custom/GenericAttestation";
 import * as CBOR from "cbor";
 import crypto from "crypto";
 
 /**
  * Specification: https://w3c.github.io/webauthn/#sctn-tpm-attestation
  */
-export interface TPMAttestation {
+export interface TPMAttestation extends GenericAttestation {
 	fmt: "tpm";
 	attStmt: TPMStmt;
 }
@@ -45,7 +45,7 @@ export function isTPMAttestation(obj: { [key: string]: any }): boolean {
 }
 
 //To simplify the function flow, we pass the whole attestation with its raw buffer and attStmt in its parsed form.
-export function TPMVerify(attestation:ClientAttestation,attStmt: TPMStmt, clientDataHash: Buffer, authenticatorData: AuthenticatorData): boolean {
+export function TPMVerify(attestation:GenericAttestation,attStmt: TPMStmt, clientDataHash: Buffer, authenticatorData: AuthenticatorData): boolean {
 	//To work with pubArea and certInfo, we have to convert its Buffer structure into JSONs. Specification and additional information can be found at the respective function documentations.
 	let pubArea:PubArea = parsePubArea(attStmt.pubArea) as PubArea;
 	let certInfo:CertInfo = parseCertInfo(attStmt.certInfo);

@@ -1,4 +1,4 @@
-import { JSONWebKey } from "./JSONWebKey";
+import { JSONWebKey } from "../custom/JSONWebKey";
 
 /**
  * Specification: https://w3c.github.io/webauthn/#sctn-attested-credential-data

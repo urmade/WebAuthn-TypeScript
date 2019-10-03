@@ -1,12 +1,12 @@
-import { UserCredentials } from "types/fido/UserCredentials";
+import { User } from "types/custom/User";
 
-let store:{[key:string]:UserCredentials} = {};
+let store:{[key:string]:User} = {};
 
 export function get(key:string) {
 	return store[key];
 }
 
-export function set(key:string, value:UserCredentials) {
+export function set(key:string, value:User) {
 	store[key] = value;
 }
 

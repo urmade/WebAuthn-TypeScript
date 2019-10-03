@@ -1,8 +1,9 @@
+import { GenericAttestation } from "types/custom/GenericAttestation";
 
 /**
  * Specification: https://w3c.github.io/webauthn/#sctn-none-attestation
  */
-export interface NoneAttestation {
+export interface NoneAttestation extends GenericAttestation {
 	fmt: "none";
 	attStmt: {}
 }

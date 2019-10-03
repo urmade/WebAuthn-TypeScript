@@ -1,9 +1,9 @@
-import { ClientAttestation } from "../ClientAttestation";
+import { GenericAttestation } from "../../custom/GenericAttestation";
 
 /**
  * Specification: https://w3c.github.io/webauthn/#sctn-android-key-attestation
  */
-export interface AndroidKeyAttestation {
+export interface AndroidKeyAttestation extends GenericAttestation {
 	fmt: "android-key";
 	attStmt: {
 		alg: number;
@@ -25,7 +25,7 @@ export function isAndroidKeyAttestation(obj: { [key: string]: any }): boolean {
 	return false;
 }
 
-export function AndroidKeyVerify(attestation:ClientAttestation, clientDataHash:Buffer):boolean {
+export function AndroidKeyVerify(attestation:GenericAttestation, clientDataHash:Buffer):boolean {
 	//TODO
 	return true;
 }

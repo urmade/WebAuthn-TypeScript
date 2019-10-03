@@ -10,6 +10,7 @@ dotenv.config();
 app.use("/authentication", (req,res,next) => {
 	AuthenticationRouter(req,res,next);
 })
+app.use(express.static("pages"));
 
 app.get("/", (req, res) => {
 	res.sendFile(path.join(__dirname, "..", "pages", "signup.html"));

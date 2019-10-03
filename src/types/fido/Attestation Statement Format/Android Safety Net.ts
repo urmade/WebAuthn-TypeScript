@@ -1,9 +1,9 @@
-import { ClientAttestation } from "../ClientAttestation";
+import { GenericAttestation } from "../../custom/GenericAttestation";
 
 /**
  * Specification: https://w3c.github.io/webauthn/#sctn-android-safetynet-attestation
  */
-export interface AndroidSafetyNetAttestation {
+export interface AndroidSafetyNetAttestation extends GenericAttestation {
 	fmt: "android-safetynet";
 	attStmt: {
 		ver: string;
@@ -23,7 +23,7 @@ export function isAndroidSafetyNetAttestation(obj: { [key: string]: any }): bool
 	return false;
 }
 
-export function AndroidSafetyNetVerify(attestation:ClientAttestation, clientDataHash:Buffer):boolean {
+export function AndroidSafetyNetVerify(attestation:GenericAttestation, clientDataHash:Buffer):boolean {
 	//TODO
 	return true;
 }

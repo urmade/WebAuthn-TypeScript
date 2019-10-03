@@ -1,9 +1,9 @@
-import { ClientAttestation } from "../ClientAttestation";
+import { GenericAttestation } from "../../custom/GenericAttestation";
 
 /**
  * Specification: https://w3c.github.io/webauthn/#sctn-packed-attestation
  */
-export interface PackedAttestation {
+export interface PackedAttestation extends GenericAttestation {
 	fmt: "packed";
 	attStmt: {
 		alg: number;
@@ -29,7 +29,7 @@ export function isPackedAttestation(obj:{[key:string]:any}):boolean {
 	return false;
 }
 
-export function PackedVerify(attestation:ClientAttestation, clientDataHash:Buffer):boolean {
+export function PackedVerify(attestation:GenericAttestation, clientDataHash:Buffer):boolean {
 	//TODO
 	return true;
 }

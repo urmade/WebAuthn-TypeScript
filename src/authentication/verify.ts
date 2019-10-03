@@ -1,26 +1,30 @@
-import { ClientAssertion } from "./../types/fido/ClientAssertion";
-import { UserCredentials } from "./../types/fido/UserCredentials";
+import { PublicKeyCredential } from "../types/fido/PublicKeyCredential";
+import { User } from "../types/custom/User";
 import * as store from "./../storage/persistentKeyStore";
 import * as cache from "./../storage/challengeCache";
 import { parseAuthenticatorData, sha256 } from "./util";
 import crypto from "crypto";
 import jwkToPem, { JWK } from "jwk-to-pem";
-import { ClientDataObject } from "types/fido/ClientDataObject";
+import { ClientDataJSON } from "types/fido/ClientDataJSON";
 import { AuthenticatorData } from "types/fido/AuthenticatorData";
 
 //This method implements the W3C standard for verifying Webauthn login requests. You can find this standard here: https://w3c.github.io/webauthn/#sctn-verifying-assertion
-export function verify(assertion:ClientAssertion):number {
+export function verify(assertion:PublicKeyCredential):number {
 
 	//Steps 1 - 3 already fulfilled at the client
 
 	//Step 4: Look up the user in your database
 	let user = store.get(assertion.id);
+	if(!user) {
+		console.error("This user is not registered at our server!");
+		return 403;
+	}
 
 	//Steps 5 - 6 already fulfilled at the client
 
 	//Step 7: Convert clientDataJSON (cData) into a JSON object
 	//Note: Per specification, the variable name of the parsed JSON has to be C. For readability, C is renamed to clientData in this example
-	const clientData:ClientDataObject = JSON.parse(assertion.response.clientDataJSON);
+	const clientData:ClientDataJSON = JSON.parse(assertion.response.clientDataJSON);
 
 	//Step 8: Verify that the type of the request is webauthn.get
 	if(clientData.type !== "webauthn.get") {

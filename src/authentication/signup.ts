@@ -2,9 +2,9 @@ import { parseAuthenticatorData, sha256 } from "./util";
 import * as storage from "./../storage/persistentKeyStore";
 import * as cache from "./../storage/challengeCache";
 
-import { ClientAttestation } from "./../types/fido/ClientAttestation";
-import { ClientDataObject } from "./../types/fido/ClientDataObject";
-import { UserCredentials } from "./../types/fido/UserCredentials";
+import { GenericAttestation } from "../types/custom/GenericAttestation";
+import { ClientDataJSON } from "../types/fido/ClientDataJSON";
+import { User } from "../types/custom/User";
 
 import { isTPMAttestation, TPMVerify, TPMStmt } from "./../types/fido/Attestation Statement Format/TPM"
 import { isPackedAttestation, PackedVerify } from "./../types/fido/Attestation Statement Format/Packed"
@@ -28,7 +28,7 @@ import { AuthenticatorData } from "types/fido/AuthenticatorData";
 export function registerKey(keyCredentialObject: { [key: string]: any }): number {
 	//Step 1 and 2 of the registering protocol specified by W3C is done at the client
 	//Step 3: Parse the clientDataJSON string to a JSON object
-	const clientData: ClientDataObject = JSON.parse(keyCredentialObject.clientDataJSON);
+	const clientData: ClientDataJSON = JSON.parse(keyCredentialObject.clientDataJSON);
 
 	//Step 4: Verify that clientData.type is webauthn.create
 	if (!(clientData.type === "webauthn.create")) {
@@ -68,7 +68,7 @@ export function registerKey(keyCredentialObject: { [key: string]: any }): number
 
 	//Step 9: Decode the attestationObject using CBOR
 	//In this step, we also convert the authData Buffer into an usable JSON
-	const attestation: ClientAttestation = CBOR.decodeFirstSync(Buffer.from(keyCredentialObject.attestationObject, 'base64'));
+	const attestation: GenericAttestation = CBOR.decodeFirstSync(Buffer.from(keyCredentialObject.attestationObject, 'base64'));
 	const authenticatorData: AuthenticatorData = parseAuthenticatorData(attestation.authData);
 
 	//Step 10: Verify that authenticatorData.rpIdHash is equal to the SHA256 encoded rpId (Relying Party ID) that we specified in the options at the client
@@ -156,7 +156,7 @@ export function registerKey(keyCredentialObject: { [key: string]: any }): number
 	}
 
 	//Step 20: Register the new credentials in your storage
-	const credential: UserCredentials = {
+	const credential: User = {
 		id: authenticatorData.attestedCredentialData.credentialId.toString('base64'),
 		credentialPublicKey: authenticatorData.attestedCredentialData.credentialPublicKey,
 		signCount: authenticatorData.signCount
