@@ -9,13 +9,13 @@ export const router = express.Router();
 router.use(bodyParser.json());
 
 router.post("/register", (req,res) => {
-	registerKey(req.body.pkc);
-	res.send("Successful!");
+	let msg = registerKey(req.body.pkc);
+	res.status(msg.status).send(msg.text);
 })
 
 router.post("/login", (req,res) => {
-	verify(req.body.pkc);
-	res.send("Successful login!");
+	let msg = verify(req.body.pkc);
+	res.status(msg.status).send(msg.text);
 })
 
 router.get("/challenge", (req,res) => {

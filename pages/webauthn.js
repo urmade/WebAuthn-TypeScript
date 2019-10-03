@@ -69,7 +69,11 @@ async function register(userId, userName, fullName) {
 		if(resp.status == 200) {
 			loadLogin();
 		}
-		else console.error(resp.status + " " + resp.statusText);
+		else {
+			resp.text().then((t) => {
+				console.error(resp.status + " " +t);
+			})
+		}
 	})
 }
 
@@ -116,7 +120,11 @@ async function login(userId) {
 		if(resp.status == 200) {
 			verifyLogin();
 		}
-		else console.error(resp.status + " " + resp.statusText);
+		else {
+			resp.text().then((t) => {
+				console.error(resp.status + " " +t);
+			})
+		}
 	})
 }
 
