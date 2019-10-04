@@ -61,7 +61,7 @@ export function registerKey(keyCredentialObject: { [key: string]: any }): ErrorM
 	if (process.env.BASEURL && !(clientData.origin === process.env.BASEURL)) {
 		return {
 			status: 403,
-			text: "The origin of the request does not come from the expected host server"
+			text: "The origin of the request ("+clientData.origin+") does not come from the expected host server"
 		}
 	}
 
