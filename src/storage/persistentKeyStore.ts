@@ -1,4 +1,4 @@
-import { User } from "types/custom/User";
+import { User } from "models/custom/User";
 
 let store:{[key:string]:User} = {};
 

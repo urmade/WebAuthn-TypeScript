@@ -1,6 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
-import { issueChallenge } from "./util";
+import { generatePublicKeyCredentialCreationOptions, generatePublicKeyCredentialRequestOptions } from "./util";
 import { registerKey } from "./signup";
 import { verify } from "./verify";
 
@@ -18,6 +18,10 @@ router.post("/login", (req,res) => {
 	res.status(msg.status).send(msg.text);
 })
 
-router.get("/challenge", (req,res) => {
-	issueChallenge(res);
+router.get("/creationOptions", (req,res) => {
+	res.send(JSON.stringify(generatePublicKeyCredentialCreationOptions()));
+})
+
+router.get("/requestOptions", (req,res) => {
+	res.send(JSON.stringify(generatePublicKeyCredentialRequestOptions()));
 })

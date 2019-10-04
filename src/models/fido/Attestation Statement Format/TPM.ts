@@ -1,5 +1,5 @@
 import { AuthenticatorData } from "../AuthenticatorData";
-import { parsePubArea, parseCertInfo, coseToJwk, sha256 } from "./../../../authentication/util";
+import { parsePubArea, parseCertInfo, coseToJwk, sha256 } from "../../../authentication/util";
 import { PubArea } from "../TPM/pubArea";
 import { CertInfo } from "../TPM/CertInfo";
 import { GenericAttestation } from "../../custom/GenericAttestation";

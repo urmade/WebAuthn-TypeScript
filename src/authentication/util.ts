@@ -5,7 +5,6 @@ import * as cache from "./../storage/challengeCache";
 import * as uuid from "uuid-parse";
 import * as CBOR from "cbor";
 import { Response } from "express";
-import { AuthenticatorData } from "types/fido/AuthenticatorData";
 
 //Function logic copied from Microsoft demo implementation: https://github.com/MicrosoftEdge/webauthnsample/blob/master/fido.js
 //Decrypt the authData Buffer and split it in its single information pieces. Its structure is specified here: https://w3c.github.io/webauthn/#authenticator-data
@@ -94,6 +93,7 @@ export function sha256(data: any) {
 	return hash.digest();
 }
 
+//Helper function that generates a random string that can be used for the user challenge
 function generateChallenge() {
 	let charPool = "1234567890qwertzuiopasdfghjklyxcvbnm";
 	let rString = "";
@@ -101,6 +101,62 @@ function generateChallenge() {
 		rString += charPool.charAt(Math.floor(Math.random() * charPool.length));
 	}
 	return rString;
+}
+
+export function generatePublicKeyCredentialCreationOptions() {
+    return {
+		//The challenge has to be a random string emitted by our application server, see documentation for getServerSideChallenge
+		challenge: generateChallenge(),
+		//A string identifier for our server / service. Name is the string displayed to the user when prompted for logging in with our server, id the scope to which our newly scheduled public key will be scoped to.
+		rp: {
+			name: process.env.RPNAME,
+			id: process.env.RPID
+		},
+		user: {
+            //An user-unique ID in your system. If you use an Identity Provider like Azure Active Directory or Auth0, you can use for example the userId scheduled by these systems as an Id
+            //In this demo, the userId is generated client-side, so we don't have to insert anything here
+			id: "",
+			//User name of the user, e.g. the mail adress with which he normally logs into the page
+			name: "",
+			//Real Name of the user
+			displayName: ""
+		},
+		//Specifies which kinds of algorithms are accepted for the creation of the public key. You can find a full list of algorithm codes here: https://www.iana.org/assignments/cose/cose.xhtml#algorithms 
+		//For Windows Hello, you must use { alg: -257, type: "public-key" }
+		pubKeyCredParams: [
+			{ alg: -7, type: "public-key" },
+			{ alg: -8, type: "public-key" },
+			{ alg: -35, type: "public-key" },
+			{ alg: -36, type: "public-key" },
+			{ alg: -37, type: "public-key" },
+			{ alg: -38, type: "public-key" },
+			{ alg: -39, type: "public-key" },
+			{ alg: -257, type: "public-key" },
+			{ alg: -258, type: "public-key" },
+			{ alg: -259, type: "public-key" }
+		],
+		//WebAuthn distincts between cross-platform authentication like YubiKeys (e.g. USB sticks that you have to insert into your PC to authenticate) and platform authentication like Windows Hello or Apple Touch ID. 
+		//https://w3c.github.io/webauthn/#dictdef-authenticatorselectioncriteria
+		authenticatorSelection: {
+			//Select authenticators that support username-less flows
+			requireResidentKey: true,
+			//This attribute decides if the client asks the user again if he really wants to sign up.
+			userVerification: "discouraged",
+			authenticatorAttachment: "platform"
+		},
+		//Time in Milliseconds the user has to complete the authentication before it times out and failes automatically
+		timeout: 60000,
+		//Specifies if the relying party (e.g. our server) wishes to know which Authenticator performed the authentication of the user. You can find all details here: https://w3c.github.io/webauthn/#attestation-conveyance
+		attestation: "indirect"
+	}
+}
+
+export function generatePublicKeyCredentialRequestOptions() {
+    return {
+		challenge: generateChallenge(),
+		timeout: 60000,
+		userVerification: "required"
+	}
 }
 
 //As Webauthn provides us only with the challenge as a base64 encoded string, we have to manually convert the scheduled plaintext string
@@ -340,122 +396,6 @@ let TPM_ECC_CURVE = {
     0x0020: "TPM_ECC_SM2_P256"
 }
 
-let TPM_CC = {
-    0x0000010F: "TPM_CC_FIRST",
-    0x0000011F: "TPM_CC_NV_UndefineSpaceSpecial",
-    0x00000120: "TPM_CC_EvictControl",
-    0x00000121: "TPM_CC_HierarchyControl",
-    0x00000122: "TPM_CC_NV_UndefineSpace",
-    0x00000124: "TPM_CC_ChangeEPS",
-    0x00000125: "TPM_CC_ChangePPS",
-    0x00000126: "TPM_CC_Clear",
-    0x00000127: "TPM_CC_ClearControl",
-    0x00000128: "TPM_CC_ClockSet",
-    0x00000129: "TPM_CC_HierarchyChangeAuth",
-    0x0000012A: "TPM_CC_NV_DefineSpace",
-    0x0000012B: "TPM_CC_PCR_Allocate",
-    0x0000012C: "TPM_CC_PCR_SetAuthPolicy",
-    0x0000012D: "TPM_CC_PP_Commands",
-    0x0000012E: "TPM_CC_SetPrimaryPolicy",
-    0x0000012F: "TPM_CC_FieldUpgradeStart",
-    0x00000130: "TPM_CC_ClockRateAdjust",
-    0x00000131: "TPM_CC_CreatePrimary",
-    0x00000132: "TPM_CC_NV_GlobalWriteLock",
-    0x00000133: "TPM_CC_GetCommandAuditDigest",
-    0x00000134: "TPM_CC_NV_Increment",
-    0x00000135: "TPM_CC_NV_SetBits",
-    0x00000136: "TPM_CC_NV_Extend",
-    0x00000137: "TPM_CC_NV_Write",
-    0x00000138: "TPM_CC_NV_WriteLock",
-    0x00000139: "TPM_CC_DictionaryAttackLockReset",
-    0x0000013A: "TPM_CC_DictionaryAttackParameters",
-    0x0000013B: "TPM_CC_NV_ChangeAuth",
-    0x0000013C: "TPM_CC_PCR_Event",
-    0x0000013D: "TPM_CC_PCR_Reset",
-    0x0000013E: "TPM_CC_SequenceComplete",
-    0x0000013F: "TPM_CC_SetAlgorithmSet",
-    0x00000140: "TPM_CC_SetCommandCodeAuditStatus",
-    0x00000141: "TPM_CC_FieldUpgradeData",
-    0x00000142: "TPM_CC_IncrementalSelfTest",
-    0x00000143: "TPM_CC_SelfTest",
-    0x00000144: "TPM_CC_Startup",
-    0x00000145: "TPM_CC_Shutdown",
-    0x00000146: "TPM_CC_StirRandom",
-    0x00000147: "TPM_CC_ActivateCredential",
-    0x00000148: "TPM_CC_Certify",
-    0x00000149: "TPM_CC_PolicyNV",
-    0x0000014A: "TPM_CC_CertifyCreation",
-    0x0000014B: "TPM_CC_Duplicate",
-    0x0000014C: "TPM_CC_GetTime",
-    0x0000014D: "TPM_CC_GetSessionAuditDigest",
-    0x0000014E: "TPM_CC_NV_Read",
-    0x0000014F: "TPM_CC_NV_ReadLock",
-    0x00000150: "TPM_CC_ObjectChangeAuth",
-    0x00000151: "TPM_CC_PolicySecret",
-    0x00000152: "TPM_CC_Rewrap",
-    0x00000153: "TPM_CC_Create",
-    0x00000154: "TPM_CC_ECDH_ZGen",
-    0x00000155: "TPM_CC_HMAC",
-    0x00000156: "TPM_CC_Import",
-    0x00000157: "TPM_CC_Load",
-    0x00000158: "TPM_CC_Quote",
-    0x00000159: "TPM_CC_RSA_Decrypt",
-    0x0000015B: "TPM_CC_HMAC_Start",
-    0x0000015C: "TPM_CC_SequenceUpdate",
-    0x0000015D: "TPM_CC_Sign",
-    0x0000015E: "TPM_CC_Unseal",
-    0x00000161: "TPM_CC_PolicySigned",
-    0x00000162: "TPM_CC_ContextLoad",
-    0x00000163: "TPM_CC_ContextSave",
-    0x00000164: "TPM_CC_ECDH_KeyGen",
-    0x00000165: "TPM_CC_EncryptDecrypt",
-    0x00000166: "TPM_CC_FlushContext",
-    0x00000167: "TPM_CC_LoadExternal",
-    0x00000168: "TPM_CC_MakeCredential",
-    0x00000169: "TPM_CC_NV_ReadPublic",
-    0x0000016A: "TPM_CC_PolicyAuthorize",
-    0x0000016B: "TPM_CC_PolicyAuthValue",
-    0x0000016C: "TPM_CC_PolicyCommandCode",
-    0x0000016D: "TPM_CC_PolicyCounterTimer",
-    0x0000016E: "TPM_CC_PolicyCpHash",
-    0x0000016F: "TPM_CC_PolicyLocality",
-    0x00000170: "TPM_CC_PolicyNameHash",
-    0x00000171: "TPM_CC_PolicyOR",
-    0x00000172: "TPM_CC_PolicyTicket",
-    0x00000173: "TPM_CC_ReadPublic",
-    0x00000174: "TPM_CC_RSA_Encrypt",
-    0x00000175: "TPM_CC_StartAuthSession",
-    0x00000176: "TPM_CC_VerifySignature",
-    0x00000177: "TPM_CC_ECC_Parameters",
-    0x00000178: "TPM_CC_FirmwareRead",
-    0x00000179: "TPM_CC_GetCapability",
-    0x0000017A: "TPM_CC_GetRandom",
-    0x0000017B: "TPM_CC_GetTestResult",
-    0x0000017C: "TPM_CC_Hash",
-    0x0000017D: "TPM_CC_PCR_Read",
-    0x0000017E: "TPM_CC_PolicyPCR",
-    0x0000017F: "TPM_CC_PolicyRestart",
-    0x00000180: "TPM_CC_ReadClock",
-    0x00000181: "TPM_CC_PCR_Extend",
-    0x00000182: "TPM_CC_PCR_SetAuthValue",
-    0x00000183: "TPM_CC_NV_Certify",
-    0x00000185: "TPM_CC_EventSequenceComplete",
-    0x00000186: "TPM_CC_HashSequenceStart",
-    0x00000187: "TPM_CC_PolicyPhysicalPresence",
-    0x00000188: "TPM_CC_PolicyDuplicationSelect",
-    0x00000189: "TPM_CC_PolicyGetDigest",
-    0x0000018A: "TPM_CC_TestParms",
-    0x0000018B: "TPM_CC_Commit",
-    0x0000018C: "TPM_CC_PolicyPassword",
-    0x0000018D: "TPM_CC_ZGen_2Phase",
-    0x0000018E: "TPM_CC_EC_Ephemeral",
-    0x0000018F: "TPM_CC_PolicyNvWritten",
-    0x00000190: "TPM_CC_PolicyTemplate",
-    0x00000191: "TPM_CC_CreateLoaded",
-    0x00000192: "TPM_CC_PolicyAuthorizeNV",
-    0x00000193: "TPM_CC_EncryptDecrypt2"
-}
-
 let TPM_ST = {
     0x00C4: "TPM_ST_RSP_COMMAND",
     0X8000: "TPM_ST_NULL",
@@ -474,150 +414,4 @@ let TPM_ST = {
     0x8024: "TPM_ST_HASHCHECK",
     0x8025: "TPM_ST_AUTH_SIGNED",
     0x8029: "TPM_ST_FU_MANIFEST"
-}
-
-let FIDO_ALG_TO_COSE = {
-    "ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW": {
-        "kty": 2,
-        "alg": -7,
-        "crv": 1
-    },
-    "ALG_SIGN_SECP256K1_ECDSA_SHA256_RAW": {
-        "kty": 2,
-        "alg": -7,
-        "crv": 8
-    },
-    "ALG_SIGN_RSASSA_PSS_SHA256_RAW": {
-        "kty": 3,
-        "alg": -37
-    },
-    "ALG_SIGN_RSASSA_PSS_SHA384_RAW": {
-        "kty": 3,
-        "alg": -38
-    },
-    "ALG_SIGN_RSASSA_PSS_SHA512_RAW": {
-        "kty": 3,
-        "alg": -39
-    },
-    "ALG_SIGN_RSASSA_PKCSV15_SHA256_RAW": {
-        "kty": 3,
-        "alg": -257
-    },
-    "ALG_SIGN_RSASSA_PKCSV15_SHA384_RAW": {
-        "kty": 3,
-        "alg": -258
-    },
-    "ALG_SIGN_RSASSA_PKCSV15_SHA512_RAW": {
-        "kty": 3,
-        "alg": -259
-    },
-    "ALG_SIGN_RSASSA_PKCSV15_SHA1_RAW": {
-        "kty": 3,
-        "alg": -65535
-    },
-    "ALG_SIGN_SECP384R1_ECDSA_SHA384_RAW": {
-        "kty": 2,
-        "alg": -35,
-        "crv": 2
-    },
-    "ALG_SIGN_SECP521R1_ECDSA_SHA512_RAW": {
-        "kty": 2,
-        "alg": -36,
-        "crv": 3
-    },
-    "ALG_SIGN_ED25519_EDDSA_SHA256_RAW": {
-        "kty": 1,
-        "alg": -8,
-        "crv": 6
-    }
-}
-
-let COSE_TO_FIDO_ALG = {
-    "kty:2,alg:-7,crv:1": "ALG_SIGN_SECP256R1_ECDSA_SHA256_RAW",
-    "kty:2,alg:-7,crv:8": "ALG_SIGN_SECP256K1_ECDSA_SHA256_RAW",
-    "kty:3,alg:-37": "ALG_SIGN_RSASSA_PSS_SHA256_RAW",
-    "kty:3,alg:-38": "ALG_SIGN_RSASSA_PSS_SHA384_RAW",
-    "kty:3,alg:-39": "ALG_SIGN_RSASSA_PSS_SHA512_RAW",
-    "kty:3,alg:-257": "ALG_SIGN_RSASSA_PKCSV15_SHA256_RAW",
-    "kty:3,alg:-258": "ALG_SIGN_RSASSA_PKCSV15_SHA384_RAW",
-    "kty:3,alg:-259": "ALG_SIGN_RSASSA_PKCSV15_SHA512_RAW",
-    "kty:3,alg:-65535": "ALG_SIGN_RSASSA_PKCSV15_SHA1_RAW",
-    "kty:2,alg:-35,crv:2": "ALG_SIGN_SECP384R1_ECDSA_SHA384_RAW",
-    "kty:2,alg:-36,crv:3": "ALG_SIGN_SECP521R1_ECDSA_SHA512_RAW",
-    "kty:1,alg:-8,crv:6": "ALG_SIGN_ED25519_EDDSA_SHA256_RAW"
-}
-
-let TPM_MANUFACTURERS = {
-    "id:414D4400": {
-        "name":"AMD",
-        "id": "AMD"
-    },
-    "id:41544D4C": {
-        "name":"Atmel",
-        "id": "ATML"
-    },
-    "id:4252434D": {
-        "name":"Broadcom",
-        "id": "BRCM"
-    },
-    "id:49424d00": {
-        "name":"IBM",
-        "id": "IBM"
-    },
-    "id:49465800": {
-        "name":"Infineon",
-        "id": "IFX"
-    },
-    "id:494E5443": {
-        "name":"Intel",
-        "id": "INTC"
-    },
-    "id:4C454E00": {
-        "name":"Lenovo",
-        "id": "LEN"
-    },
-    "id:4E534D20": {
-        "name":"National Semiconductor",
-        "id": "NSM"
-    },
-    "id:4E545A00": {
-        "name":"Nationz",
-        "id": "NTZ"
-    },
-    "id:4E544300": {
-        "name":"Nuvoton Technology",
-        "id": "NTC"
-    },
-    "id:51434F4D": {
-        "name":"Qualcomm",
-        "id": "QCOM"
-    },
-    "id:534D5343": {
-        "name":"SMSC",
-        "id": "SMSC"
-    },
-    "id:53544D20": {
-        "name":"ST Microelectronics",
-        "id": "STM"
-    },
-    "id:534D534E": {
-        "name":"Samsung",
-        "id": "SMSN"
-    },
-    "id:534E5300": {
-        "name":"Sinosun",
-        "id": "SNS"
-    },
-    "id:54584E00": {
-        "name":"Texas Instruments",
-        "id": "TXN"
-    },
-    "id:57454300": {
-        "name":"Winbond",
-        "id": "WEC"
-    },
-    "id:524F4343": {
-        "name":"Fuzhouk Rockchip",
-        "id": "ROCC"
-    }
 }

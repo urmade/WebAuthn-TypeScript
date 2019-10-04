@@ -2,19 +2,19 @@ import { parseAuthenticatorData, sha256 } from "./util";
 import * as storage from "./../storage/persistentKeyStore";
 import * as cache from "./../storage/challengeCache";
 
-import { GenericAttestation } from "../types/custom/GenericAttestation";
-import { ClientDataJSON } from "../types/fido/ClientDataJSON";
-import { User } from "../types/custom/User";
+import { GenericAttestation } from "../models/custom/GenericAttestation";
+import { ClientDataJSON } from "../models/fido/ClientDataJSON";
+import { User } from "../models/custom/User";
 
-import { isTPMAttestation, TPMVerify, TPMStmt } from "./../types/fido/Attestation Statement Format/TPM"
-import { isPackedAttestation, PackedVerify } from "./../types/fido/Attestation Statement Format/Packed"
-import { isAndroidKeyAttestation, AndroidKeyVerify } from "./../types/fido/Attestation Statement Format/Android Key"
-import { isAndroidSafetyNetAttestation, AndroidSafetyNetVerify } from "./../types/fido/Attestation Statement Format/Android Safety Net"
-import { isFIDOU2FAttestation, FIDOU2FVerify } from "./../types/fido/Attestation Statement Format/FIDO U2F"
-import { isNoneAttestation, NoneVerify } from "./../types/fido/Attestation Statement Format/None"
+import { isTPMAttestation, TPMVerify, TPMStmt } from "../models/fido/Attestation Statement Format/TPM"
+import { isPackedAttestation, PackedVerify } from "../models/fido/Attestation Statement Format/Packed"
+import { isAndroidKeyAttestation, AndroidKeyVerify } from "../models/fido/Attestation Statement Format/Android Key"
+import { isAndroidSafetyNetAttestation, AndroidSafetyNetVerify } from "../models/fido/Attestation Statement Format/Android Safety Net"
+import { isFIDOU2FAttestation, FIDOU2FVerify } from "../models/fido/Attestation Statement Format/FIDO U2F"
+import { isNoneAttestation, NoneVerify } from "../models/fido/Attestation Statement Format/None"
 
 import * as CBOR from "cbor";
-import { AuthenticatorData } from "types/fido/AuthenticatorData";
+import { AuthenticatorData } from "models/fido/AuthenticatorData";
 
 /**
  * 
