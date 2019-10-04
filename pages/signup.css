@@ -73,6 +73,16 @@ button:disabled:hover {
 	cursor: pointer;
 }
 
+@media screen and (max-width: 500px) {
+	main {
+		margin: 0;
+		width: auto;
+		height: auto;
+		padding: 20px;
+	}
+}
+
+
 .lds-ellipsis {
 	display: inline-block;
 	position: relative;
