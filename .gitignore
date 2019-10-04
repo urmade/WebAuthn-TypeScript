@@ -4,3 +4,4 @@ dest
 def
 .vscode
 TODO
+.env
