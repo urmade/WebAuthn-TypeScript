@@ -135,21 +135,6 @@ async function getServerSideRequestOptions() {
 	return json;
 }
 
-
-function bufferEncode(value) {
-	return base64js.fromByteArray(value)
-		.replace(/\+/g, "-")
-		.replace(/\//g, "_")
-		.replace(/=/g, "");
-}
-
-function bufferDecode(value) {
-	value = value
-		.replace(/\-/g, "+")
-		.replace(/\_/g, "/");
-	return Uint8Array.from(atob(value), c => c.charCodeAt(0));
-}
-
 //Function that encodes a UInt8Array to a base64 encoded string
 function base64encode(arrayBuffer) {
 	if (!arrayBuffer || arrayBuffer.length == 0)
@@ -189,4 +174,20 @@ function generateId() {
 		if (i % 8 == 0 && i > 0) rString += "-";
 	}
 	return rString;
+}
+
+//Function that correctly encodes the rawId of the credentials object into a string that should match credential.Id
+function bufferEncode(value) {
+	return base64js.fromByteArray(value)
+		.replace(/\+/g, "-")
+		.replace(/\//g, "_")
+		.replace(/=/g, "");
+}
+
+//Function to correctly decode credential.Id
+function bufferDecode(value) {
+	value = value
+		.replace(/\-/g, "+")
+		.replace(/\_/g, "/");
+	return Uint8Array.from(atob(value), c => c.charCodeAt(0));
 }

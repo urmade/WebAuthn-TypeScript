@@ -1,3 +1,4 @@
+//Copied from webauthn.io. Library to work with base64 strings
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
 ;(function (exports) {
