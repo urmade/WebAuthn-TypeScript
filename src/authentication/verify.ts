@@ -9,12 +9,12 @@ import { ClientDataJSON } from "models/fido/ClientDataJSON";
 import { AuthenticatorData } from "models/fido/AuthenticatorData";
 
 //This method implements the W3C standard for verifying Webauthn login requests. You can find this standard here: https://w3c.github.io/webauthn/#sctn-verifying-assertion
-export function verify(assertion:PublicKeyCredential):ErrorMessage {
+export function verify(assertion:PublicKeyCredential, userId:string):ErrorMessage {
 
 	//Steps 1 - 3 already fulfilled at the client
 
 	//Step 4: Look up the user in your database
-	let user = store.get(assertion.id);
+	let user = store.get(userId);
 	if(!user) {
 		return {
 			status: 403,

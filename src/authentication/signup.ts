@@ -25,7 +25,7 @@ import { AuthenticatorData } from "models/fido/AuthenticatorData";
  * clientData: C
  * clientDataHash: hash
  */
-export function registerKey(keyCredentialObject: { [key: string]: any }): ErrorMessage {
+export function registerKey(keyCredentialObject: { [key: string]: any }, userId:string): ErrorMessage {
 	//Step 1 and 2 of the registering protocol specified by W3C is done at the client
 	//Step 3: Parse the clientDataJSON string to a JSON object
 	const clientData: ClientDataJSON = JSON.parse(keyCredentialObject.clientDataJSON);
@@ -171,6 +171,12 @@ export function registerKey(keyCredentialObject: { [key: string]: any }): ErrorM
 	//TODO: Implement checks depending on attestation type
 
 	//Step 19: Verify that the credentialId wasn't used by any other user in your storage
+	const { StringDecoder } = require('string_decoder');
+
+	const utfDec = new StringDecoder("utf8");
+	let utfId = utfDec.write(authenticatorData.attestedCredentialData.credentialId);
+
+	let utfCredentialId = authenticatorData.attestedCredentialData.credentialId.toString('utf8');
 	let credentialId = authenticatorData.attestedCredentialData.credentialId.toString('base64');
 	if(storage.isDuplicate(credentialId)) {
 		return {
@@ -181,12 +187,13 @@ export function registerKey(keyCredentialObject: { [key: string]: any }): ErrorM
 
 	//Step 20: Register the new credentials in your storage
 	const credential: User = {
-		id: authenticatorData.attestedCredentialData.credentialId.toString('base64'),
+		id: keyCredentialObject.id,
 		credentialPublicKey: authenticatorData.attestedCredentialData.credentialPublicKey,
 		signCount: authenticatorData.signCount
 	};
 
-	storage.set(credential.id,credential);
+
+	storage.set(userId,credential);
 
 	return {status: 200, text:"Registration successful!"};
 }

@@ -3,9 +3,12 @@ import { router as AuthenticationRouter } from "./authentication/router";
 
 import express from "express";3
 import dotenv from "dotenv";
+import cookies from "cookie-parser";
 
 const app = express();
 dotenv.config();
+
+app.use(cookies());
 
 app.use("/authentication", (req,res,next) => {
 	AuthenticationRouter(req,res,next);
