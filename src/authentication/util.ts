@@ -374,6 +374,14 @@ function readBE32(buffer: Buffer) {
     return new Uint32Array(buffer.buffer)[0]
 }
 
+export function ecdaaWarning() {
+    console.warn("Your clients TPM module is using an ECDAA key to encrypt its verification data. ECDAA verification is not yet supported in this framework and will be implemented in a further release. If you want to support the development of this library, please create an issue on the GitHub repository with the following information:\n\n ECDAA Verification not supported!\nClient machine: <your-device>\nAuthentication method used: <e.g. Windows Hello, Apple Touch ID, ...>");
+}
+
+export function algorithmWarning(alg:number | string) {
+    console.warn("The authenticator is using an algorithm which is not supported to encrypt its signature. This is a shortcoming of this library and will be fixed in further releases. If you want to support the development of this library, please create an issue on the GitHub repository with following information:\n\n TPM Verification Algorithm not supported!\nAlgorithm: " + alg);
+}
+
 
 let TPM_ALG = {
     0x0000: "TPM_ALG_ERROR",

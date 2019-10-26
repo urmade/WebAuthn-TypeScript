@@ -7,9 +7,9 @@ import { ClientDataJSON } from "../models/fido/ClientDataJSON";
 import { User } from "../models/custom/User";
 
 import { isTPMAttestation, TPMVerify, TPMStmt } from "../models/fido/Attestation Statement Format/TPM"
-import { isPackedAttestation, PackedVerify } from "../models/fido/Attestation Statement Format/Packed"
+import { isPackedAttestation, PackedVerify, PackedStmt } from "../models/fido/Attestation Statement Format/Packed"
 import { isAndroidKeyAttestation, AndroidKeyVerify } from "../models/fido/Attestation Statement Format/Android Key"
-import { isAndroidSafetyNetAttestation, AndroidSafetyNetVerify } from "../models/fido/Attestation Statement Format/Android Safety Net"
+import { isAndroidSafetyNetAttestation, AndroidSafetyNetVerify, AndroidSafetyNetStmt } from "../models/fido/Attestation Statement Format/Android Safety Net"
 import { isFIDOU2FAttestation, FIDOU2FVerify } from "../models/fido/Attestation Statement Format/FIDO U2F"
 import { isNoneAttestation, NoneVerify } from "../models/fido/Attestation Statement Format/None"
 
@@ -149,9 +149,9 @@ export function registerKey(keyCredentialObject: { [key: string]: any }, userId:
 
 	switch(attestation.fmt) {
 		case "tpm":  validAttestationSignature = TPMVerify(attestation, attestation.attStmt as TPMStmt, clientDataHash, authenticatorData); break;
-		case "packed":  validAttestationSignature = PackedVerify(attestation,clientDataHash); break;
+		case "packed":  validAttestationSignature = PackedVerify(attestation, attestation.attStmt as PackedStmt, clientDataHash, authenticatorData); break;
 		case "android-key":  validAttestationSignature = AndroidKeyVerify(attestation,clientDataHash); break;
-		case "android-safetynet":  validAttestationSignature = AndroidSafetyNetVerify(attestation,clientDataHash); break;
+		case "android-safetynet":  validAttestationSignature = AndroidSafetyNetVerify(attestation, attestation.attStmt as AndroidSafetyNetStmt, clientDataHash, authenticatorData); break;
 		case "fido-u2f":  validAttestationSignature = FIDOU2FVerify(attestation,clientDataHash); break;
 		case "none":  validAttestationSignature = NoneVerify(); break;
 		default: break;
@@ -167,18 +167,11 @@ export function registerKey(keyCredentialObject: { [key: string]: any }, userId:
 	//TODO: Implement Trust anchor acquisition
 
 	//Step 18: Verify the trustworthiness of the attestation. To do so, take the outputs of Step 16 (which by specification would be that the attestation is either self-attested, used ECDAA, used a X.509 certificate or did no attestation at all).
-	//Note: For simplicity reasons, we currently only return true or false depending on if all verficiation criteria of the different attestation standards could be met. Therefore we cannot do Step 18.
 	//TODO: Implement checks depending on attestation type
 
 	//Step 19: Verify that the credentialId wasn't used by any other user in your storage
-	const { StringDecoder } = require('string_decoder');
-
-	const utfDec = new StringDecoder("utf8");
-	let utfId = utfDec.write(authenticatorData.attestedCredentialData.credentialId);
-
-	let utfCredentialId = authenticatorData.attestedCredentialData.credentialId.toString('utf8');
-	let credentialId = authenticatorData.attestedCredentialData.credentialId.toString('base64');
-	if(storage.isDuplicate(credentialId)) {
+	let potentialUser = storage.get(userId);
+	if(potentialUser && potentialUser.id === keyCredentialObject.id) {
 		return {
 			status: 401,
 			text: "The credentialId is already in use. Please re-attempt the registration"

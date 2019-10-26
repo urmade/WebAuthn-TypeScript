@@ -2,6 +2,7 @@ export interface CertInfo {
 	attested: {
 		name: Buffer;
 		nameAlg: string;
+		qualifiedName: Buffer;
 	};
 	clockInfo: {
 		clock: Buffer;
