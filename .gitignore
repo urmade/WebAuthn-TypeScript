@@ -2,6 +2,4 @@ node_modules
 nodemon.json
 dest
 def
-.vscode
 TODO
-.env
